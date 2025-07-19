@@ -16,7 +16,7 @@ import java.sql.*;
 
 public class UserDAO {
     public boolean registerUser(User user) {
-        String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -48,7 +48,7 @@ public class UserDAO {
             if (rs.next()) {
                 return new User(
                     rs.getInt("user_id"),
-                    rs.getString("username"),
+                    rs.getString("name"),
                     rs.getString("email"),
                     rs.getString("password")
                 );
