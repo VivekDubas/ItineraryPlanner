@@ -1,0 +1,35 @@
+# -------------------------
+# NetBeans specific folders
+# -------------------------
+nbproject/private/
+build/
+dist/
+
+# -------------------------
+# Compiled class files
+# -------------------------
+*.class
+
+# -------------------------
+# System-specific files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# IDE metadata (if using VS Code too)
+# -------------------------
+.vscode/
+
+# -------------------------
+# Database config file (local only)
+# Ignore DBConnection.java if config is machine-specific
+# -------------------------
+src/db/DBConnection.java
+
+
+# -------------------------
+# Logs and temporary files
+# -------------------------
+*.log
+*.tmp
