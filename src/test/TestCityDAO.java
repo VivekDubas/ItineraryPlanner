@@ -6,7 +6,7 @@ import java.util.List;
 
 public class TestCityDAO {
 public static void main(String[] args) {
-CityDAO cityDAO = new CityDAO();
+    CityDAO cityDAO = new CityDAO();
     List<City> cities = cityDAO.getAllCities();
 
     if (cities.isEmpty()) {

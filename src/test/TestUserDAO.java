@@ -17,12 +17,12 @@ public class TestUserDAO {
         UserDAO dao = new UserDAO();
 
         // Test Registration
-        User newUser = new User(1,"Alice", "alice@example.com", "pass123");
+        User newUser = new User(2,"Alice", "alice@example.com", "pass123");
         boolean success = dao.registerUser(newUser);
         System.out.println("Registration successful? " + success);
 
         // Test Login
-        User loggedIn = dao.login("alice@example.com", "pass123");
+        User loggedIn = dao.login("ali@example.com", "pass123");
         if (loggedIn != null) {
             System.out.println("Login successful. Welcome: " + loggedIn.getName());
         } else {
