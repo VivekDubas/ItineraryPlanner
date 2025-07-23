@@ -10,9 +10,9 @@ public static void main(String[] args) {
     List<City> cities = cityDAO.getAllCities();
 
     if (cities.isEmpty()) {
-        System.out.println("⚠️ No cities found in the database.");
+        System.out.println("No cities found in the database.");
     } else {
-        System.out.println("✅ List of cities:");
+        System.out.println("List of cities:");
         for (City city : cities) {
             System.out.println("---------------------------------");
             System.out.println("City ID   : " + city.getCityId());
