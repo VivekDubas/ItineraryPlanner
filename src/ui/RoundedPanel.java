@@ -7,6 +7,7 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 
+
 public class RoundedPanel extends JPanel {
     private int cornerRadius = 30;
 
@@ -29,7 +30,7 @@ public class RoundedPanel extends JPanel {
         
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        Color transparentDark = new Color(0, 0, 0, 180); // Match your existing overlay
+        Color transparentDark = new Color(0, 0, 0, 120); // Match your existing overlay
         g2.setColor(transparentDark);
         g2.fillRoundRect(0, 0, width, height, arcs.width, arcs.height);
     }
