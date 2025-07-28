@@ -135,38 +135,56 @@ public class ItineraryScreen extends JFrame {
         });
         lblBackground.add(btnLogout);
 
-        // Semi-transparent TextArea for generated itinerary
+        // Semi-transparent TextArea for generated itinerary (with rounded background)
         txtGenerated = new JTextArea();
         txtGenerated.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        txtGenerated.setForeground(Color.WHITE);
+        txtGenerated.setForeground(Color.BLACK);
         txtGenerated.setOpaque(false);
         txtGenerated.setLineWrap(true);
         txtGenerated.setWrapStyleWord(true);
         txtGenerated.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JScrollPane scrollGenerated = new JScrollPane(txtGenerated);
-        scrollGenerated.setBounds(30, 70, 830, 130);
         scrollGenerated.setOpaque(false);
         scrollGenerated.getViewport().setOpaque(false);
-        scrollGenerated.setBorder(BorderFactory.createLineBorder(new Color(255, 255, 255, 100), 1));
-        formPanel.add(scrollGenerated);
+        scrollGenerated.setBorder(BorderFactory.createEmptyBorder());
+
+        // Custom panel with transparent dark rounded background
+        JPanel itineraryPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(0, 0, 0, 120)); // Semi-transparent black
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20); // Rounded corners
+            }
+        };
+        itineraryPanel.setLayout(new BorderLayout());
+        itineraryPanel.setBounds(30, 70, 830, 130);
+        itineraryPanel.setOpaque(false);
+        itineraryPanel.add(scrollGenerated, BorderLayout.CENTER);
+
+        // Add the new rounded panel instead of direct scroll pane
+        formPanel.add(itineraryPanel);
+
 
         // Save & Home buttons
         btnSave = new JButton("Save Itinerary");
         btnSave.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         btnSave.setBounds(250, 210, 180, 40);
         btnSave.addActionListener(e -> {
-    Itinerary itinerary = new Itinerary(0, currentUser.getUserId(), cityId, totalDuration, totalCost, null);
-    int itineraryId = new ItineraryDAO().createItinerary(itinerary);
+        Itinerary itinerary = new Itinerary(0, currentUser.getUserId(), cityId, totalDuration, totalCost, null);
+        int itineraryId = new ItineraryDAO().createItinerary(itinerary);
 
-    for (int i = 0; i < selectedPlaces.size(); i++) {
-        ItineraryPlace ip = new ItineraryPlace(itineraryId, selectedPlaces.get(i).getPlaceId(), i + 1);
-        new ItineraryPlaceDAO().addPlaceToItinerary(ip);
-    }
+        for (int i = 0; i < selectedPlaces.size(); i++) {
+            ItineraryPlace ip = new ItineraryPlace(itineraryId, selectedPlaces.get(i).getPlaceId(), i + 1);
+            new ItineraryPlaceDAO().addPlaceToItinerary(ip);
+        }
 
-    JOptionPane.showMessageDialog(this, "Itinerary Saved Successfully!");
-    loadSavedItineraries();
-});
+        JOptionPane.showMessageDialog(this, "Itinerary Saved Successfully!");
+        loadSavedItineraries();
+    });
 
         formPanel.add(btnSave);
         
@@ -175,9 +193,9 @@ public class ItineraryScreen extends JFrame {
         btnHome.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         btnHome.setBounds(470, 210, 180, 40);
         btnHome.addActionListener(e -> {
-    dispose();
-    new HomeScreen(currentUser).setVisible(true);
-});
+        dispose();
+        new HomeScreen(currentUser).setVisible(true);
+    });
 
         formPanel.add(btnHome);
 
