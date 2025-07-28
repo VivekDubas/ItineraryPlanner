@@ -9,14 +9,29 @@
  */
 package ui;
 
-import dao.CityDAO;
-import dao.TagDAO;
-import model.City;
-import model.Tag;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Toolkit;
+
+
+import model.City;
+import model.Tag;
+import model.User;
+import dao.CityDAO;
+import dao.TagDAO;
+import dao.PlaceDAO;
+import model.Place;
+
 
 public class HomeScreen extends JFrame {
 
@@ -26,9 +41,13 @@ public class HomeScreen extends JFrame {
     private JLabel lblBackground;
     private JPanel tagPanel;
 
-    public HomeScreen() {
+    private User currentUser;
+
+    public HomeScreen(User user) {
+        this.currentUser = user;
         initComponents();
     }
+
 
     private void initComponents() {
         setTitle("Itinerary Planner - Home");
@@ -145,6 +164,7 @@ public class HomeScreen extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         btnGenerate = new JButton("Generate Itinerary");
         btnGenerate.setFont(inputFont);
+        btnGenerate.addActionListener(e -> generateItinerary());
         formPanel.add(btnGenerate, gbc);
 
         // Logout Button (top right)
@@ -155,6 +175,12 @@ public class HomeScreen extends JFrame {
 
         lblBackground.add(formPanel);
         add(lblBackground);
+        
+        btnLogout.addActionListener(e -> {
+            dispose();
+            new LoginScreen().setVisible(true);
+        });
+
     }
 
     private void loadCities() {
@@ -176,8 +202,66 @@ public class HomeScreen extends JFrame {
             tagPanel.add(checkBox);
         }
     }
+    
+    private void generateItinerary() {
+    String selectedCity = (String) cmbCity.getSelectedItem();
+    String timeStr = txtTime.getText().trim();
+    String budgetStr = txtBudget.getText().trim();
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new HomeScreen().setVisible(true));
+    if (selectedCity == null || timeStr.isEmpty() || budgetStr.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+        return;
     }
+
+    try {
+        double maxTime = Double.parseDouble(timeStr);
+        double maxBudget = Double.parseDouble(budgetStr);
+
+        int cityId = new CityDAO().getAllCities().stream()
+                .filter(c -> c.getCityName().equals(selectedCity))
+                .findFirst().orElseThrow().getCityId();
+
+        List<String> selectedTags = new ArrayList<>();
+        for (Component comp : tagPanel.getComponents()) {
+            if (comp instanceof JCheckBox checkBox && checkBox.isSelected()) {
+                selectedTags.add(checkBox.getText());
+            }
+        }
+
+        PlaceDAO placeDAO = new PlaceDAO();
+        List<Place> filteredPlaces = placeDAO.getPlacesByCityAndTags(cityId, selectedTags);
+
+        // Simple greedy selection based on time + budget
+        List<Place> selectedPlaces = new ArrayList<>();
+        double totalTime = 0, totalCost = 0;
+
+        for (Place place : filteredPlaces) {
+            if (totalTime + place.getVisitDuration() <= maxTime &&
+                totalCost + place.getEntryFee() <= maxBudget) {
+                selectedPlaces.add(place);
+                totalTime += place.getVisitDuration();
+                totalCost += place.getEntryFee();
+            }
+        }
+
+        if (selectedPlaces.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No places match your criteria.");
+        } else {
+            StringBuilder sb = new StringBuilder("Generated Itinerary:\n");
+            for (Place p : selectedPlaces) {
+                sb.append("- ").append(p.getName())
+                  .append(" (").append(p.getVisitDuration()).append(" hrs, ₹")
+                  .append(p.getEntryFee()).append(")\n");
+            }
+            sb.append("\nTotal Time: ").append(totalTime).append(" hrs");
+            sb.append("\nTotal Cost: ₹").append(totalCost);
+            JOptionPane.showMessageDialog(this, sb.toString());
+        }
+
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Please enter valid numbers for time and budget.");
+    }
+}
+
+
 }

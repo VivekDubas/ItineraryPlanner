@@ -173,7 +173,10 @@ public class LoginScreen extends javax.swing.JFrame {
 
         if (user != null) {
             JOptionPane.showMessageDialog(this, "Login successful. Welcome, " + user.getName() + "!");
-            // TODO: Open next screen, e.g., new Dashboard(user).setVisible(true); dispose();
+            HomeScreen homeScreen = new HomeScreen(user);
+            homeScreen.setVisible(true);
+            dispose(); // close the login screen
+
         } else {
             JOptionPane.showMessageDialog(this, "Invalid email or password.");
         }
