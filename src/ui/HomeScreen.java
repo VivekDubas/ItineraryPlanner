@@ -9,50 +9,52 @@
  */
 package ui;
 
+import dao.CityDAO;
+import dao.TagDAO;
+import model.City;
+import model.Tag;
+
 import javax.swing.*;
 import java.awt.*;
-import ui.RoundedPanel;
+import java.util.List;
 
 public class HomeScreen extends JFrame {
 
-    // Declare components
-    private JComboBox<String> cmbCity, cmbTime, cmbBudget;
-    private JCheckBox chkTag1, chkTag2, chkTag3;
+    private JComboBox<String> cmbCity;
+    private JTextField txtTime, txtBudget;
     private JButton btnGenerate, btnLogout;
     private JLabel lblBackground;
+    private JPanel tagPanel;
 
     public HomeScreen() {
         initComponents();
     }
 
     private void initComponents() {
-        // Frame setup
         setTitle("Itinerary Planner - Home");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Fullscreen
-        setUndecorated(false); // Allows title bar (optional)
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int width = (int) screenSize.getWidth();
-        int height = (int) screenSize.getHeight();
+        int width = screenSize.width;
+        int height = screenSize.height;
         setSize(width, height);
         setLocationRelativeTo(null);
-        setLayout(null); // Absolute layout for background
+        setLayout(null);
 
-        // Load and scale background image
+        // Background image
         ImageIcon originalIcon = new ImageIcon(getClass().getResource("/Resources/travel4.jpeg"));
         Image img = originalIcon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         lblBackground = new JLabel(new ImageIcon(img));
         lblBackground.setBounds(0, 0, width, height);
         lblBackground.setLayout(null);
 
-        // Updated size for form panel
+        // Center form panel
         int formWidth = 900;
         int formHeight = 600;
         int x = (width - formWidth) / 2;
         int y = (height - formHeight) / 2 - 50;
 
-        // Panel for form (semi-transparent, rounded)
         RoundedPanel formPanel = new RoundedPanel(30);
         formPanel.setLayout(new GridBagLayout());
         formPanel.setBounds(x, y, formWidth, formHeight);
@@ -61,119 +63,118 @@ public class HomeScreen extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(15, 15, 15, 15);
         gbc.anchor = GridBagConstraints.WEST;
-        
-                // Font and size setup
+
         Font labelFont = new Font("Segoe UI", Font.PLAIN, 24);
-        Font comboFont = new Font("Segoe UI", Font.PLAIN, 18);
-        Dimension comboBoxSize = new Dimension(250, 35);  // slightly bigger for readability
+        Font inputFont = new Font("Segoe UI", Font.PLAIN, 18);
+        Dimension inputSize = new Dimension(250, 35);
 
-        
-
-                // Title
+        // Title
         JLabel lblTitle = new JLabel("Itinerary Planner");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 40));
         lblTitle.setForeground(Color.WHITE);
-
-        // Row 0: Title
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(5, 15, 10, 15); // LESS TOP PADDING = MOVES TITLE UP
         formPanel.add(lblTitle, gbc);
-        gbc.anchor = GridBagConstraints.WEST;
         gbc.gridwidth = 1;
-        gbc.insets = new Insets(15, 15, 15, 15); // reset default insets
+        gbc.anchor = GridBagConstraints.WEST;
 
-
-                // Row 1: City
+        // City
         gbc.gridy++;
         gbc.gridx = 0;
         JLabel lblCity = new JLabel("City:");
-        lblCity.setForeground(Color.WHITE);
         lblCity.setFont(labelFont);
+        lblCity.setForeground(Color.WHITE);
         formPanel.add(lblCity, gbc);
 
         gbc.gridx = 1;
-        cmbCity = new JComboBox<>(new String[]{"Select", "Delhi", "Mumbai", "Mysore"});
-        cmbCity.setFont(comboFont);
-        cmbCity.setPreferredSize(comboBoxSize);
+        cmbCity = new JComboBox<>();
+        cmbCity.setFont(inputFont);
+        cmbCity.setPreferredSize(inputSize);
         formPanel.add(cmbCity, gbc);
+        loadCities();
 
-
-                // Row 2: Time
+        // Time
         gbc.gridy++;
         gbc.gridx = 0;
-        JLabel lblTime = new JLabel("Time:");
-        lblTime.setForeground(Color.WHITE);
+        JLabel lblTime = new JLabel("Time (in hours):");
         lblTime.setFont(labelFont);
+        lblTime.setForeground(Color.WHITE);
         formPanel.add(lblTime, gbc);
 
         gbc.gridx = 1;
-        cmbTime = new JComboBox<>(new String[]{"1 Day", "2 Days", "Weekend"});
-        cmbTime.setFont(comboFont);
-        cmbTime.setPreferredSize(comboBoxSize);
-        formPanel.add(cmbTime, gbc);
+        txtTime = new JTextField();
+        txtTime.setFont(inputFont);
+        txtTime.setPreferredSize(inputSize);
+        formPanel.add(txtTime, gbc);
 
-
-                // Row 3: Budget
+        // Budget
         gbc.gridy++;
         gbc.gridx = 0;
-        JLabel lblBudget = new JLabel("Budget:");
-        lblBudget.setForeground(Color.WHITE);
+        JLabel lblBudget = new JLabel("Budget (in ₹):");
         lblBudget.setFont(labelFont);
+        lblBudget.setForeground(Color.WHITE);
         formPanel.add(lblBudget, gbc);
 
         gbc.gridx = 1;
-        cmbBudget = new JComboBox<>(new String[]{"< ₹2000", "₹2000 - ₹5000", "> ₹5000"});
-        cmbBudget.setFont(comboFont);
-        cmbBudget.setPreferredSize(comboBoxSize);
-        formPanel.add(cmbBudget, gbc);
+        txtBudget = new JTextField();
+        txtBudget.setFont(inputFont);
+        txtBudget.setPreferredSize(inputSize);
+        formPanel.add(txtBudget, gbc);
 
-                // Row 4: Tags
+        // Tags
         gbc.gridy++;
         gbc.gridx = 0;
         JLabel lblTags = new JLabel("Tags:");
-        lblTags.setForeground(Color.WHITE);
         lblTags.setFont(labelFont);
+        lblTags.setForeground(Color.WHITE);
         formPanel.add(lblTags, gbc);
 
         gbc.gridx = 1;
-        JPanel tagPanel = new JPanel();
+        tagPanel = new JPanel();
         tagPanel.setOpaque(false);
-
-        chkTag1 = new JCheckBox("Nature");
-        chkTag2 = new JCheckBox("History");
-        chkTag3 = new JCheckBox("Adventure");
-
-        chkTag1.setFont(comboFont);
-        chkTag2.setFont(comboFont);
-        chkTag3.setFont(comboFont);
-
-        tagPanel.add(chkTag1);
-        tagPanel.add(chkTag2);
-        tagPanel.add(chkTag3);
+        tagPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         formPanel.add(tagPanel, gbc);
+        loadTags();
 
-
-        // Row 5: Generate Button
+        // Generate Button
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         btnGenerate = new JButton("Generate Itinerary");
-        btnGenerate.setFont(comboFont);
+        btnGenerate.setFont(inputFont);
         formPanel.add(btnGenerate, gbc);
 
-        // Logout Button (top-right, adjusted)
+        // Logout Button (top right)
         btnLogout = new JButton("Logout");
-        btnLogout.setFont(comboFont);
-        btnLogout.setBounds(width - 140, 20, 120, 40);// Adjust based on screen width
+        btnLogout.setFont(inputFont);
+        btnLogout.setBounds(width - 140, 20, 120, 40);
         lblBackground.add(btnLogout);
 
-        // Add to background
         lblBackground.add(formPanel);
         add(lblBackground);
+    }
+
+    private void loadCities() {
+        CityDAO cityDAO = new CityDAO();
+        List<City> cities = cityDAO.getAllCities();
+        for (City city : cities) {
+            cmbCity.addItem(city.getCityName());
+        }
+    }
+
+    private void loadTags() {
+        TagDAO tagDAO = new TagDAO();
+        List<Tag> tags = tagDAO.getAllTags();
+        for (Tag tag : tags) {
+            JCheckBox checkBox = new JCheckBox(tag.getTagName());
+            checkBox.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+            checkBox.setOpaque(false);
+            checkBox.setForeground(Color.WHITE);
+            tagPanel.add(checkBox);
+        }
     }
 
     public static void main(String[] args) {
