@@ -255,7 +255,17 @@ public class HomeScreen extends JFrame {
             }
             sb.append("\nTotal Time: ").append(totalTime).append(" hrs");
             sb.append("\nTotal Cost: ₹").append(totalCost);
-            JOptionPane.showMessageDialog(this, sb.toString());
+            // Launch ItineraryScreen with data
+            ItineraryScreen itineraryScreen = new ItineraryScreen(
+                currentUser,
+                cityId,
+                selectedPlaces,
+                totalTime,
+                totalCost
+            );
+            itineraryScreen.setVisible(true);
+            dispose(); // Close HomeScreen
+
         }
 
     } catch (NumberFormatException ex) {

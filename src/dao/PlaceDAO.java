@@ -40,7 +40,29 @@ public class PlaceDAO {
         }
         return places;
     }
-    
+    public Place getPlaceById(int placeId) {
+    String sql = "SELECT * FROM places WHERE place_id = ?";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setInt(1, placeId);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            return new Place(
+                rs.getInt("place_id"),
+                rs.getString("name"),
+                rs.getInt("city_id"),
+                rs.getDouble("visit_duration"),
+                rs.getDouble("entry_fee"),
+                rs.getString("description")
+            );
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return null;
+}
+
     public List<Place> getPlacesByCityAndTags(int cityId, List<String> tagNames) {
     List<Place> places = new ArrayList<>();
     if (tagNames == null || tagNames.isEmpty()) return getPlacesByCityId(cityId);

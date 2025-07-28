@@ -10,9 +10,18 @@
 
 package ui;
 
+import dao.ItineraryDAO;
+import dao.ItineraryPlaceDAO;
+import dao.PlaceDAO;
+import model.Itinerary;
+import model.ItineraryPlace;
+import model.Place;
+import model.User;
+
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
+import java.util.List;
 
 public class ItineraryScreen extends JFrame {
 
@@ -20,10 +29,66 @@ public class ItineraryScreen extends JFrame {
     private JTable tblSavedItineraries;
     private JTextArea txtGenerated;
     private JLabel lblBackground;
+    private User currentUser;
+    private int cityId;
+    private double totalDuration;
+    private double totalCost;
+    private List<Place> selectedPlaces;
 
-    public ItineraryScreen() {
-        initComponents();
+
+    public ItineraryScreen(User user, int cityId, List<Place> selectedPlaces, double totalDuration, double totalCost) {
+    this.currentUser = user;
+    this.cityId = cityId;
+    this.totalDuration = totalDuration;
+    this.totalCost = totalCost;
+    this.selectedPlaces = selectedPlaces;
+    initComponents();
+    loadGeneratedItinerary();
+    loadSavedItineraries();
+}
+    private void loadGeneratedItinerary() {
+    StringBuilder sb = new StringBuilder();
+
+    if (selectedPlaces == null || selectedPlaces.isEmpty()) {
+        sb.append("No places were selected for this itinerary.");
+    } else {
+        for (int i = 0; i < selectedPlaces.size(); i++) {
+            Place p = selectedPlaces.get(i);
+            sb.append((i + 1) + ". " + p.getName() + " - ₹" + p.getEntryFee() + ", " + p.getVisitDuration() + " hrs\n");
+        }
     }
+
+    txtGenerated.setText(sb.toString());
+}
+
+
+
+
+    private void loadSavedItineraries() {
+    List<Itinerary> itineraries = new ItineraryDAO().getUserItineraries(currentUser.getUserId());
+    DefaultTableModel model = (DefaultTableModel) tblSavedItineraries.getModel();
+    model.setRowCount(0);
+
+    for (int i = 0; i < itineraries.size(); i++) {
+        Itinerary itin = itineraries.get(i);
+        List<ItineraryPlace> ipList = new ItineraryPlaceDAO().getPlacesForItinerary(itin.getItineraryId());
+
+        StringBuilder itineraryText = new StringBuilder();
+        for (ItineraryPlace ip : ipList) {
+            Place place = new PlaceDAO().getPlaceById(ip.getPlaceId());
+            if (place != null) itineraryText.append(place.getName()).append(" → ");
+        }
+        if (itineraryText.length() > 0) itineraryText.setLength(itineraryText.length() - 3); // Remove last arrow
+
+        model.addRow(new Object[]{
+            i + 1,
+            itin.getCreatedOn().toString(),
+            itineraryText.toString(),
+            itin.getTotalDuration() + " hrs",
+            "₹" + itin.getTotalCost()
+        });
+    }
+}
 
     private void initComponents() {
         // Full screen setup
@@ -64,6 +129,10 @@ public class ItineraryScreen extends JFrame {
         btnLogout = new JButton("Logout");
         btnLogout.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         btnLogout.setBounds(width - 140, 20, 120, 40);
+        btnLogout.addActionListener(e -> {
+            dispose();
+            new LoginScreen().setVisible(true);
+        });
         lblBackground.add(btnLogout);
 
         // Semi-transparent TextArea for generated itinerary
@@ -86,11 +155,30 @@ public class ItineraryScreen extends JFrame {
         btnSave = new JButton("Save Itinerary");
         btnSave.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         btnSave.setBounds(250, 210, 180, 40);
+        btnSave.addActionListener(e -> {
+    Itinerary itinerary = new Itinerary(0, currentUser.getUserId(), cityId, totalDuration, totalCost, null);
+    int itineraryId = new ItineraryDAO().createItinerary(itinerary);
+
+    for (int i = 0; i < selectedPlaces.size(); i++) {
+        ItineraryPlace ip = new ItineraryPlace(itineraryId, selectedPlaces.get(i).getPlaceId(), i + 1);
+        new ItineraryPlaceDAO().addPlaceToItinerary(ip);
+    }
+
+    JOptionPane.showMessageDialog(this, "Itinerary Saved Successfully!");
+    loadSavedItineraries();
+});
+
         formPanel.add(btnSave);
+        
 
         btnHome = new JButton("Go To Home");
         btnHome.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         btnHome.setBounds(470, 210, 180, 40);
+        btnHome.addActionListener(e -> {
+    dispose();
+    new HomeScreen(currentUser).setVisible(true);
+});
+
         formPanel.add(btnHome);
 
         // Label: Saved Itineraries
@@ -145,10 +233,6 @@ public class ItineraryScreen extends JFrame {
         // Add everything to background
         lblBackground.add(formPanel);
         add(lblBackground);
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ItineraryScreen().setVisible(true));
     }
 }
 
